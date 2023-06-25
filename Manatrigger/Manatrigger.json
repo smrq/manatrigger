@@ -1,0 +1,8 @@
+{
+    "Author": "smrq",
+    "Name": "Manatrigger",
+    "Punchline": "Trigger commands after casting an action.",
+    "Description": "Trigger commands after casting an action.\n\n/manatrigger - Opens config.",
+    "InternalName": "manatrigger",
+    "ApplicableVersion": "any"
+}
