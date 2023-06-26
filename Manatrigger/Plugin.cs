@@ -1,3 +1,4 @@
+using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Command;
@@ -20,6 +21,7 @@ namespace Manatrigger
 
         public SigScanner SigScanner { get; init; }
         public ObjectTable ObjectTable { get; init; }
+        public DataManager DataManager { get; init; }
         public Configuration Configuration { get; init; }
         public WindowSystem WindowSystem = new("Manatrigger");
 
@@ -27,12 +29,14 @@ namespace Manatrigger
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager,
             [RequiredVersion("1.0")] SigScanner sigScanner,
-            [RequiredVersion("1.0")] ObjectTable objectTable)
+            [RequiredVersion("1.0")] ObjectTable objectTable,
+            [RequiredVersion("1.0")] DataManager dataManager)
         {
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
             SigScanner = sigScanner;
             ObjectTable = objectTable;
+            DataManager = dataManager;
 
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Configuration.Initialize(PluginInterface);
@@ -43,7 +47,7 @@ namespace Manatrigger
             WindowSystem.AddWindow(ConfigWindow);
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "A useful message to display in /xlhelp"
+                HelpMessage = "Opens config."
             });
 
             PluginInterface.UiBuilder.Draw += DrawUI;

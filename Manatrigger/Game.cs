@@ -12,7 +12,6 @@ using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Manatrigger
@@ -23,20 +22,19 @@ namespace Manatrigger
         private ObjectTable objectTable;
 
         private delegate bool UseActionLocationDelegate(ActionManager* actionManager, ActionType actionType, uint actionId, long targetedActorId, Vector3* vectorLocation, uint param);
-        private delegate void UseActionLocationEventDelegate(ActionType actionType, uint actionId, long targetedActorId, Vector3 vectorLocation, uint param);
-        private Hook<UseActionLocationDelegate>? useActionLocationHook;
-
         private delegate uint GetTextCommandParamIDDelegate(PronounModule* pronounModule, nint* bytePtrPtr, int length);
+        private delegate GameObject* GetGameObjectFromPronounIDDelegate(PronounModule* pronounModule, uint pronounId);
+        private delegate void ProcessChatBoxDelegate(UIModule* uiModule, nint message, nint unused, byte a4);
+
+        private Hook<UseActionLocationDelegate>? useActionLocationHook;
+#pragma warning disable IDE0044 // Field never assigned
         [Signature("48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC 20 48 83 79 18 00")]
         private Hook<GetTextCommandParamIDDelegate>? getTextCommandParamIDHook;
-
-        private delegate GameObject* GetGameObjectFromPronounIDDelegate(PronounModule* pronounModule, uint pronounId);
         [Signature("E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 0F 85 ?? ?? ?? ?? 8D 4F DD")]
         private Hook<GetGameObjectFromPronounIDDelegate>? getGameObjectFromPronounIDHook;
-
-        private delegate void ProcessChatBoxDelegate(UIModule* uiModule, nint message, nint unused, byte a4);
         [Signature("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9")]
         private ProcessChatBoxDelegate? processChatBox;
+#pragma warning restore IDE0044
 
         private const string TriggerTargetPlaceholder = "<trigger>";
         private const uint TriggerTargetPronounId = 10_500;
@@ -103,6 +101,8 @@ namespace Manatrigger
         {
             foreach (var trigger in configuration.Triggers)
             {
+                if (!trigger.Enabled) continue;
+                if (trigger.Macro.Trim() == string.Empty) continue;
                 if (trigger.Actions.Any(action => action.Id == actionId))
                 {
                     PluginLog.Debug($"Firing trigger {trigger.Name}");

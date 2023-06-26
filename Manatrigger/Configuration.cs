@@ -16,6 +16,7 @@ namespace Manatrigger
         public class Trigger
         {
             public string Name = string.Empty;
+            public bool Enabled = true;
             public List<Action> Actions = new();
             public string Macro = string.Empty;
         }
