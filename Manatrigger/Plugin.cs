@@ -4,8 +4,6 @@ using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using ECommons;
-using ECommons.Automation;
 using Manatrigger.Windows;
 
 namespace Manatrigger
@@ -22,9 +20,7 @@ namespace Manatrigger
 
         public SigScanner SigScanner { get; init; }
         public ObjectTable ObjectTable { get; init; }
-        public Chat Chat { get; init; }
         public Configuration Configuration { get; init; }
-        public Hooks Hooks { get; init; }
         public WindowSystem WindowSystem = new("Manatrigger");
 
         public Plugin(
@@ -41,10 +37,6 @@ namespace Manatrigger
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Configuration.Initialize(PluginInterface);
 
-            ECommonsMain.Init(pluginInterface, this);
-
-            Chat = new Chat();
-            Hooks = new Hooks(this);
             Game = new Game(this);
 
             ConfigWindow = new ConfigWindow(this);
@@ -64,7 +56,6 @@ namespace Manatrigger
             WindowSystem.RemoveAllWindows();
             ConfigWindow.Dispose();
             Game.Dispose();
-            Hooks.Dispose();
         }
 
         private void OnCommand(string command, string args)
