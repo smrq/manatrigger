@@ -48,7 +48,7 @@ jobs:
         run: dotnet build -c Release --no-restore --nologo -o ./bin/Release
 
       - name: Generate Checksums
-        working-directory: Manatrigger/bin/Release/manatrigger
+        working-directory: Manatrigger/bin/Release/Manatrigger
         run: |
           sha512sum latest.zip >> checksums.sha512
 

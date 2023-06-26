@@ -4,17 +4,14 @@
         "Name": "manatrigger",
         "InternalName": "manatrigger",
         "Description": "Write messages, don't spam them.",
-        "AssemblyVersion": "0.0.0.1",
-        "TestingAssemblyVersion": "0.0.0.1",
+        "AssemblyVersion": "0.0.0.0",
+        "TestingAssemblyVersion": "0.0.0.0",
         "RepoUrl": "https://github.com/smrq/manatrigger",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
-        "Tags": [
-            "chat"
-        ],
         "IconUrl": "https://github.com/smrq/manatrigger/raw/master/icon.png",
-        "DownloadLinkInstall": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.1/latest.zip",
-        "DownloadLinkTesting": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.1/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.1/latest.zip"
+        "DownloadLinkInstall": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.0/latest.zip",
+        "DownloadLinkTesting": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.0/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.0/latest.zip"
     }
 ]
