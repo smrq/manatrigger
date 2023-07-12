@@ -12,6 +12,7 @@ using Dalamud.Plugin;
 using Manatrigger.Windows;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static Manatrigger.Configuration;
 
 namespace Manatrigger
 {
@@ -19,6 +20,7 @@ namespace Manatrigger
     {
         public string Name => "Manatrigger";
         private const string CommandName = "/manatrigger";
+        private enum TriggerUpdate { Disable, Enable, Toggle }
 
         private DalamudPluginInterface PluginInterface { get; init; }
         private CommandManager CommandManager { get; init; }
@@ -35,10 +37,11 @@ namespace Manatrigger
         public WindowSystem WindowSystem = new("Manatrigger");
 
         private const string HelpText = "Usage: /manatrigger <command>\n" +
-            "  (no command) - Shows the configuration window.\n" +
-            "  config - Shows the configuration window.\n" +
+            "  (no command) - Shows or hides the configuration window.\n" +
+            "  config - Shows or hides the configuration window.\n" +
             "  enable <name> - Enables the specified trigger. Without a name, enables all triggers.\n" +
             "  disable <name> - Disables the specified trigger. Without a name, disables all triggers.\n" +
+            "  toggle <name> - Toggles the specified trigger. Without a name, enables or disables all triggers.\n" +
             "  help - Shows this help text.";
 
         public Plugin(
@@ -66,7 +69,7 @@ namespace Manatrigger
             WindowSystem.AddWindow(ConfigWindow);
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "Shows the configuration window. Additional commands: /manatrigger <help | config | enable | disable>"
+                HelpMessage = "Shows the configuration window. Additional commands: /manatrigger <help | config | enable | disable | toggle>"
             });
 
             PluginInterface.UiBuilder.Draw += DrawUI;
@@ -81,6 +84,16 @@ namespace Manatrigger
             Game.Dispose();
         }
 
+        private void DrawUI()
+        {
+            WindowSystem.Draw();
+        }
+
+        public void OpenConfigUI()
+        {
+            ConfigWindow.IsOpen = true;
+        }
+
         private void OnCommand(string command, string args)
         {
             PluginLog.Debug($"OnCommand `{command}` `{args}`");
@@ -92,92 +105,63 @@ namespace Manatrigger
             }
 
             var regex = Regex.Match(args, "^(\\w+) ?(.*)");
-            var subcommand = regex.Success && regex.Groups.Count > 1 ? regex.Groups[1].Value : string.Empty;
+            var subcommand = regex.Success && regex.Groups.Count > 1 ? regex.Groups[1].Value.ToLower() : string.Empty;
 
             PluginLog.Debug($"Subcommand `{subcommand}`");
 
-            switch (subcommand.ToLower())
+            switch (subcommand)
             {
                 case "enable":
-                    {
-                        if (regex.Groups.Count < 2 || string.IsNullOrEmpty(regex.Groups[2].Value))
-                        {
-                            foreach (var trigger in Configuration.Triggers)
-                            {
-                                trigger.Enabled = true;
-                            }
-                            Configuration.Save();
-                            ChatMessage("Enabled all triggers.");
-                        }
-                        else
-                        {
-                            var name = regex.Groups[2].Value;
-                            var trigger = Configuration.Triggers.Find(trigger => trigger.Name == name);
-                            if (trigger == null)
-                            {
-                                ChatMessage($"Trigger \"{name}\" not found.", XivChatType.ErrorMessage);
-                            }
-                            else
-                            {
-                                trigger.Enabled = true;
-                                Configuration.Save();
-                                ChatMessage($"Trigger \"{name}\" enabled.");
-                            }
-                        }
-                        return;
-                    }
-                
                 case "disable":
+                case "toggle":
+                    if (regex.Groups.Count < 2 || string.IsNullOrEmpty(regex.Groups[2].Value))
                     {
-                        if (regex.Groups.Count < 2 || string.IsNullOrEmpty(regex.Groups[2].Value))
-                        {
-                            foreach (var trigger in Configuration.Triggers)
-                            {
-                                trigger.Enabled = false;
-                            }
-                            Configuration.Save();
-                            ChatMessage("Disabled all triggers.");
-                        }
-                        else
-                        {
-                            var name = regex.Groups[2].Value;
-                            var trigger = Configuration.Triggers.Find(trigger => trigger.Name == name);
-                            if (trigger == null)
-                            {
-                                ChatMessage($"Trigger \"{name}\" not found.", XivChatType.ErrorMessage);
-                            }
-                            else
-                            {
-                                trigger.Enabled = false;
-                                Configuration.Save();
-                                ChatMessage($"Trigger \"{name}\" disabled.");
-                            }
-                        }
-                        return;
+                        UpdateAllTriggers(subcommand);
                     }
-                
+                    else
+                    {
+                        var name = regex.Groups[2].Value;
+                        UpdateTrigger(subcommand, name);
+                    }
+                    return;
+
                 case "help":
-                    {
-                        ChatMessage(HelpText);
-                        return;
-                    }
-                
+                    ChatMessage(HelpText);
+                    return;
+
                 default:
-                    {
-                        ChatMessage($"Invalid command.\n{HelpText}", XivChatType.ErrorMessage);
-                        return;
-                    }
+                    ChatMessage($"Invalid command.\n{HelpText}", XivChatType.ErrorMessage);
+                    return;
             }
         }
 
-        private void DrawUI()
+        private void UpdateAllTriggers(string subcommand)
         {
-            WindowSystem.Draw();
+            var value =
+                (subcommand == "enable") ||
+                (subcommand == "toggle" && Configuration.Triggers.Any(trigger => !trigger.Enabled));
+            foreach (var trigger in Configuration.Triggers)
+            {
+                trigger.Enabled = value;
+            }
+            Configuration.Save();
+            ChatMessage($"{(value ? "Enabled" : "Disabled")} all triggers.");
         }
 
-        public void OpenConfigUI()
+        private void UpdateTrigger(string subcommand, string name)
         {
-            ConfigWindow.IsOpen = true;
+            var trigger = Configuration.Triggers.Find(trigger => trigger.Name == name);
+            if (trigger == null)
+            {
+                ChatMessage($"Trigger \"{name}\" not found.", XivChatType.ErrorMessage);
+                return;
+            }
+            var value =
+                (subcommand == "enable") ||
+                (subcommand == "toggle" && !trigger.Enabled);
+            trigger.Enabled = value;
+            Configuration.Save();
+            ChatMessage($"Trigger \"{name}\" {(value ? "enabled" : "disabled")}.");
         }
 
         private void ChatMessage(string message, XivChatType type = XivChatType.Echo)
