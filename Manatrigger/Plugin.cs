@@ -9,6 +9,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using Manatrigger.Windows;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -23,14 +24,16 @@ namespace Manatrigger
         private enum TriggerUpdate { Disable, Enable, Toggle }
 
         private DalamudPluginInterface PluginInterface { get; init; }
-        private CommandManager CommandManager { get; init; }
+        private ICommandManager CommandManager { get; init; }
         private ConfigWindow ConfigWindow { get; init; }
         private Game Game { get; init; }
 
-        public ChatGui ChatGui { get; init; }
-        public DataManager DataManager { get; init; }
-        public ObjectTable ObjectTable { get; init; }
-        public SigScanner SigScanner { get; init; }
+        public IChatGui ChatGui { get; init; }
+        public IDataManager DataManager { get; init; }
+        public IGameInteropProvider GameInteropProvider { get; init; }
+        public IObjectTable ObjectTable { get; init; }
+        public IPluginLog PluginLog { get; init; }
+        public ISigScanner SigScanner { get; init; }
 
         public Configuration Configuration { get; init; }
 
@@ -46,18 +49,22 @@ namespace Manatrigger
 
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager,
-            [RequiredVersion("1.0")] ChatGui chatGui,
-            [RequiredVersion("1.0")] DataManager dataManager,
-            [RequiredVersion("1.0")] ObjectTable objectTable,
-            [RequiredVersion("1.0")] SigScanner sigScanner)
+            [RequiredVersion("1.0")] ICommandManager commandManager,
+            [RequiredVersion("1.0")] IChatGui chatGui,
+            [RequiredVersion("1.0")] IDataManager dataManager,
+            [RequiredVersion("1.0")] IGameInteropProvider gameInteropProvider,
+            [RequiredVersion("1.0")] IObjectTable objectTable,
+            [RequiredVersion("1.0")] IPluginLog pluginLog,
+            [RequiredVersion("1.0")] ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
 
             ChatGui = chatGui;
             DataManager = dataManager;
+            GameInteropProvider = gameInteropProvider;
             ObjectTable = objectTable;
+            PluginLog = pluginLog;
             SigScanner = sigScanner;
 
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -171,7 +178,7 @@ namespace Manatrigger
                 Type = type,
                 Message = new SeStringBuilder().AddText(message).Build()
             };
-            ChatGui.PrintChat(entry);
+            ChatGui.Print(entry);
         }
     }
 }

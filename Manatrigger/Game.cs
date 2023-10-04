@@ -1,6 +1,7 @@
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Hooking;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
@@ -19,7 +20,9 @@ namespace Manatrigger
     public unsafe class Game: IDisposable
     {
         private Configuration configuration;
-        private ObjectTable objectTable;
+        private IGameInteropProvider gameInteropProvider;
+        private IObjectTable objectTable;
+        private IPluginLog pluginLog;
 
         private delegate bool UseActionLocationDelegate(ActionManager* actionManager, ActionType actionType, uint actionId, long targetedActorId, Vector3* vectorLocation, uint param);
         private delegate uint GetTextCommandParamIDDelegate(PronounModule* pronounModule, nint* bytePtrPtr, int length);
@@ -27,14 +30,12 @@ namespace Manatrigger
         private delegate void ProcessChatBoxDelegate(UIModule* uiModule, nint message, nint unused, byte a4);
 
         private Hook<UseActionLocationDelegate>? useActionLocationHook;
-#pragma warning disable IDE0044 // Field never assigned
         [Signature("48 89 5C 24 10 48 89 6C 24 18 56 48 83 EC 20 48 83 79 18 00")]
-        private Hook<GetTextCommandParamIDDelegate>? getTextCommandParamIDHook;
+        private Hook<GetTextCommandParamIDDelegate>? getTextCommandParamIDHook = default;
         [Signature("E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 0F 85 ?? ?? ?? ?? 8D 4F DD")]
-        private Hook<GetGameObjectFromPronounIDDelegate>? getGameObjectFromPronounIDHook;
+        private Hook<GetGameObjectFromPronounIDDelegate>? getGameObjectFromPronounIDHook = default;
         [Signature("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9")]
-        private ProcessChatBoxDelegate? processChatBox;
-#pragma warning restore IDE0044
+        private ProcessChatBoxDelegate? processChatBox = default;
 
         private const string TriggerTargetPlaceholder = "<trigger>";
         private const uint TriggerTargetPronounId = 10_500;
@@ -44,10 +45,12 @@ namespace Manatrigger
         public Game(Plugin plugin)
         {
             configuration = plugin.Configuration;
+            gameInteropProvider = plugin.GameInteropProvider;
             objectTable = plugin.ObjectTable;
+            pluginLog = plugin.PluginLog;
 
-            SignatureHelper.Initialise(this);
-            useActionLocationHook = Hook<UseActionLocationDelegate>.FromAddress((nint)ActionManager.Addresses.UseActionLocation.Value, UseActionLocationDetour);
+            gameInteropProvider.InitializeFromAttributes(this);
+            useActionLocationHook = gameInteropProvider.HookFromAddress<UseActionLocationDelegate>((nint)ActionManager.Addresses.UseActionLocation.Value, UseActionLocationDetour);
 
             useActionLocationHook.Enable();
             getTextCommandParamIDHook!.Enable();
@@ -64,7 +67,7 @@ namespace Manatrigger
         private bool UseActionLocationDetour(ActionManager* actionManager, ActionType actionType, uint actionId, long targetObjectId, Vector3* vectorLocation, uint param)
         {
             lastTargetObjectId = targetObjectId;
-            //PluginLog.Debug($"UseActionLocation type={actionType} id={actionId} targetedActorId={targetObjectId:x} vectorLocation={*vectorLocation} param={param}");
+            //pluginLog.Debug($"UseActionLocation type={actionType} id={actionId} targetedActorId={targetObjectId:x} vectorLocation={*vectorLocation} param={param}");
             OnUseActionLocation(actionType, actionId, targetObjectId, *vectorLocation, param);
             return useActionLocationHook!.Original(actionManager, actionType, actionId, targetObjectId, vectorLocation, param);
         }
@@ -77,7 +80,7 @@ namespace Manatrigger
             {
                 result = TriggerTargetPronounId;
             }
-            //PluginLog.Debug($"GetTextCommandParamID text={text} result={result}");
+            //pluginLog.Debug($"GetTextCommandParamID text={text} result={result}");
             return result;
         }
 
@@ -91,9 +94,9 @@ namespace Manatrigger
                 {
                     result = (GameObject*)obj.Address;
                 }
-                PluginLog.Debug($"{TriggerTargetPlaceholder} id={lastTargetObjectId:x} ptr={(uint)result:x}");
+                pluginLog.Debug($"{TriggerTargetPlaceholder} id={lastTargetObjectId:x} ptr={(uint)result:x}");
             }
-            //PluginLog.Debug($"GetGameObjectFromPronounIDDetour pronounId={pronounId} result={(uint)result:x}");
+            //pluginLog.Debug($"GetGameObjectFromPronounIDDetour pronounId={pronounId} result={(uint)result:x}");
             return result;
         }
 
@@ -105,7 +108,7 @@ namespace Manatrigger
                 if (trigger.Macro.Trim() == string.Empty) continue;
                 if (trigger.Actions.Any(action => action.Id == actionId))
                 {
-                    PluginLog.Debug($"Firing trigger {trigger.Name}");
+                    pluginLog.Debug($"Firing trigger {trigger.Name}");
                     var uiModule = Framework.Instance()->GetUiModule();
                     var stringPtr = Utf8String.FromString(trigger.Macro);
                     try

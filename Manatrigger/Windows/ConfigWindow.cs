@@ -2,10 +2,10 @@ using System;
 using System.Data;
 using System.Linq;
 using System.Numerics;
-using Dalamud.Data;
 using Dalamud.Interface;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using ImGuiNET;
 using Action = Lumina.Excel.GeneratedSheets.Action;
 
@@ -14,7 +14,7 @@ namespace Manatrigger.Windows;
 public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
-    private readonly DataManager dataManager;
+    private readonly IDataManager dataManager;
 
     private int selectedTrigger = -1;
     private string actionSearchText = string.Empty;
