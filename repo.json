@@ -4,14 +4,14 @@
         "Name": "manatrigger",
         "InternalName": "manatrigger",
         "Description": "Trigger commands after casting an action.",
-        "AssemblyVersion": "0.0.0.3",
-        "TestingAssemblyVersion": "0.0.0.3",
+        "AssemblyVersion": "0.0.0.4",
+        "TestingAssemblyVersion": "0.0.0.4",
         "RepoUrl": "https://github.com/smrq/manatrigger",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 9,
         "IconUrl": "https://github.com/smrq/manatrigger/raw/master/icon.png",
-        "DownloadLinkInstall": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.3/latest.zip",
-        "DownloadLinkTesting": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.3/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.3/latest.zip"
+        "DownloadLinkInstall": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.4/latest.zip",
+        "DownloadLinkTesting": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.4/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/smrq/manatrigger/releases/download/v0.0.0.4/latest.zip"
     }
 ]
